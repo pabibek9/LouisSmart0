@@ -1,0 +1,264 @@
+/* ========================================
+   Professional Table Styling
+   ======================================== */
+
+.professional-table-wrapper {
+  background: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Header Section */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #1e293b;
+}
+
+.table-title {
+  color: #f8fafc;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+/* Copy Button */
+.copy-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: transparent;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.copy-button:hover {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.copy-button:active {
+  background-color: #334155;
+  border-color: #64748b;
+}
+
+.copy-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Professional Table Container */
+.professional-table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.professional-table-container table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  min-width: 600px;
+}
+
+/* Table Headers */
+.professional-table-container thead {
+  background-color: transparent;
+}
+
+.professional-table-container th {
+  color: #94a3b8;
+  background-color: #0f172a;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  padding: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #334155;
+  border-top: 2px solid #334155;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.professional-table-container th:first-child {
+  border-left: 2px solid #334155;
+  border-radius: 8px 0 0 0;
+}
+
+.professional-table-container th:last-child {
+  border-right: 2px solid #334155;
+  border-radius: 0 8px 0 0;
+}
+
+/* Table Body Rows */
+.professional-table-container tbody tr {
+  border-bottom: 1px solid #1e293b;
+  transition: all 0.2s ease;
+}
+
+.professional-table-container tbody tr:hover {
+  background-color: #111827;
+  box-shadow: inset 0 0 8px rgba(100, 116, 139, 0.1);
+}
+
+.professional-table-container tbody tr:last-child {
+  border-bottom: 2px solid #334155;
+}
+
+/* Table Data Cells */
+.professional-table-container td {
+  color: #e2e8f0;
+  padding: 16px;
+  vertical-align: top;
+  border-right: 1px solid #1e293b;
+}
+
+.professional-table-container td:last-child {
+  border-right: none;
+}
+
+.professional-table-container tbody tr:first-child td:first-child {
+  border-left: 2px solid #334155;
+}
+
+.professional-table-container tbody tr:first-child td:last-child {
+  border-right: 2px solid #334155;
+}
+
+.professional-table-container tbody tr:last-child td:first-child {
+  border-left: 2px solid #334155;
+  border-radius: 0 0 0 8px;
+}
+
+.professional-table-container tbody tr:last-child td:last-child {
+  border-right: 2px solid #334155;
+  border-radius: 0 0 8px 0;
+}
+
+/* Text Content */
+.professional-table-container td p {
+  margin: 0;
+  color: #e2e8f0;
+}
+
+.professional-table-container td strong {
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+.professional-table-container td em {
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+/* Code in Tables */
+.professional-table-container td code {
+  background-color: #0f172a;
+  color: #7ee787;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875em;
+}
+
+/* Links in Tables */
+.professional-table-container td a {
+  color: #60a5fa;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.professional-table-container td a:hover {
+  color: #93c5fd;
+  border-bottom-color: #60a5fa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .professional-table-wrapper {
+    padding: 16px;
+  }
+
+  .table-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .table-title {
+    font-size: 1.1rem;
+  }
+
+  .copy-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .professional-table-container th,
+  .professional-table-container td {
+    padding: 12px;
+    font-size: 0.875rem;
+  }
+
+  .professional-table-container {
+    margin: 0 -16px;
+    width: calc(100% + 32px);
+  }
+}
+
+/* Scrollbar Styling */
+.professional-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.professional-table-container::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+.professional-table-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.professional-table-container::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Animation for Copy Feedback */
+@keyframes copyPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(96, 165, 250, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(96, 165, 250, 0);
+  }
+}

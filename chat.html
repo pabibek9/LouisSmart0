@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <title>Mate Louis Smart — AI Content Generator</title>
+  <meta name="description" content="Generate viral content, hooks, scripts, and product descriptions with AI. Mate Louis Smart helps you create 6 months of content in minutes." />
+  <meta name="theme-color" content="#fafaf9" />
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mate Louis Smart — AI Content Generator" />
+  <meta property="og:description" content="Generate viral content, hooks, scripts, and product descriptions with AI." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/wizard-louis.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="color-scheme" content="light" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Mate Louis" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/chat.css" />
+</head>
+<body>
+  <a href="#chat" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;padding:8px 16px;background:#5b6cff;color:#fff;text-decoration:none;border-radius:4px;" onfocus="this.style.left='8px';this.style.top='8px';this.style.width='auto';this.style.height='auto';" onblur="this.style.left='-9999px';">Skip to chat</a>
+  <div id="app-bootstrap-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fcfbf7; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.4s ease, visibility 0.4s ease; font-family: 'Inter', sans-serif;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1.2s linear infinite;">
+        <path d="M12 2v3"/>
+        <path d="M12 19v3"/>
+        <path d="M4.93 4.93l2.12 2.12"/>
+        <path d="M16.95 16.95l2.12 2.12"/>
+        <path d="M2 12h3"/>
+        <path d="M19 12h3"/>
+        <path d="M4.93 19.07l2.12-2.12"/>
+        <path d="M16.95 7.05l2.12-2.12"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <div style="color: #44403c; font-size: 14px; font-weight: 500; letter-spacing: 0.3px;">Loading...</div>
+    </div>
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </div>
+  <div class="app sidebar-collapsed" id="app" style="opacity: 0; transition: opacity 0.3s ease;">
+    <aside class="sidebar" id="sidebar" aria-label="Conversations">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v3"/><path d="M12 19v3"/><path d="M4.93 4.93l2.12 2.12"/><path d="M16.95 16.95l2.12 2.12"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="M4.93 19.07l2.12-2.12"/><path d="M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <span class="brand-name">Mate Louis</span>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        <span>New chat</span>
+      </button>
+
+      <div class="sidebar-section-label">Recent</div>
+      <nav class="recent-list" id="recentList" role="list" aria-label="Recent conversations"></nav>
+
+      <button class="clear-all-btn" id="clearAllBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span>Delete all chats</span>
+      </button>
+
+      <div class="sidebar-footer">
+        <div class="user-chip" role="button" tabindex="0" aria-label="User menu — click to logout">
+          <div class="avatar"></div>
+          <div class="user-meta">
+            <div class="user-name"></div>
+            <div class="user-sub"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span>Mate Louis Smart</span>
+          <span class="model-tag">AI</span>
+        </div>
+        <button class="icon-btn" id="webhookUploadBtn" aria-label="Upload image to webhook" title="Upload image to webhook">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15V5a2 2 0 0 0-2-2h-7.5"/><path d="M3 21h10.5a2 2 0 0 0 2-2V10.5"/></svg>
+        </button>
+        <button class="icon-btn" id="newChatBtnTop" aria-label="New chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+      </header>
+
+      <section class="chat" id="chat" aria-live="polite" role="log">
+        <div class="empty" id="empty">
+          <div class="empty-copy">
+            <h1 class="empty-title">So smart it probably ignores your bad ideas.</h1>
+            <p class="empty-sub">How can I help today?</p>
+          </div>
+          <div class="wizard-arena">
+            <div class="wizard-stage" id="wizardStage">
+              <div class="wizard-glow" aria-hidden="true"></div>
+              <div class="wizard-smoke" aria-hidden="true"></div>
+              <div class="wizard-floats" id="wizardFloats">
+                <button type="button" class="float-chip premium-content-chip" data-slot="0">
+                  <span class="premium-chip-text">Generate 6 months of content</span>
+                  <img class="premium-crown" src="/premium-crown.png" alt="" aria-hidden="true" />
+                </button>
+                <button type="button" class="float-chip" data-slot="1">Generate viral hooks</button>
+                <button type="button" class="float-chip" data-slot="2">Generate TikTok/Reels scripts</button>
+                <button type="button" class="float-chip" data-slot="3">Make Product descriptions</button>
+              </div>
+              <img class="wizard-img" src="/wizard-louis.png" alt="Mate Louis wizard" width="280" height="320" />
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="composer-wrap">
+        <div class="composer" id="composer" role="form" aria-label="Message composer">
+          <div class="attachments" id="attachments"></div>
+          <div class="composer-row">
+            <button class="icon-btn attach-btn" id="attachBtn" aria-label="Attach image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V8a2 2 0 0 0-2-2h-1.5l-1.7-2H9.2L7.5 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9"/><circle cx="12" cy="13" r="3.5"/><path d="M18 17v6"/><path d="M15 20h6"/></svg>
+            </button>
+            <div class="attach-menu" id="attachMenu" hidden>
+              <button class="attach-menu-item" id="attachGalleryBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                Photo Library
+              </button>
+              <button class="attach-menu-item" id="attachCameraBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Take Selfie
+              </button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden />
+            <input type="file" id="cameraInput" accept="image/*" capture="user" hidden />
+            <textarea id="input" rows="1" placeholder="Message Mate Louis Smart…" autocomplete="off" aria-label="Type your message"></textarea>
+            <button class="send-btn" id="sendBtn" aria-label="Send" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14-7-7 14-2-5-5-2z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="footnote">If Mate Louis Smart makes mistakes, that's on you!</div>
+      </div>
+
+      <!-- Camera / Selfie Modal -->
+      <div class="camera-modal" id="cameraModal" hidden aria-hidden="true">
+        <div class="camera-backdrop" id="cameraBackdrop"></div>
+        <div class="camera-card">
+          <div class="camera-header">
+            <h3 class="camera-title">Take a Selfie</h3>
+            <button class="camera-close-btn" id="cameraCloseBtn" aria-label="Close camera">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="camera-body">
+            <div class="camera-viewfinder" id="cameraViewfinder">
+              <video id="cameraVideo" autoplay playsinline muted></video>
+              <canvas id="cameraCanvas" hidden></canvas>
+              <img id="cameraPreview" hidden alt="Captured selfie" />
+              <div class="camera-placeholder" id="cameraPlaceholder">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Starting camera…</span>
+              </div>
+            </div>
+          </div>
+          <div class="camera-actions" id="cameraActions">
+            <button class="camera-btn camera-btn-capture" id="cameraCaptureBtn" aria-label="Take photo">
+              <div class="capture-ring"></div>
+            </button>
+          </div>
+          <div class="camera-actions" id="cameraReviewActions" hidden>
+            <button class="camera-btn-text camera-btn-retake" id="cameraRetakeBtn">Retake</button>
+            <button class="camera-btn-text camera-btn-use" id="cameraUseBtn">Use Photo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="drop-overlay" id="dropOverlay">
+        <div class="drop-card">
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+          </div>
+          <div class="drop-title">Drop images to attach</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="image-lightbox" id="imageLightbox" hidden aria-hidden="true">
+    <button type="button" class="image-lightbox-backdrop" id="imageLightboxBackdrop" aria-label="Close preview"></button>
+    <div class="image-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Image preview">
+      <button type="button" class="image-lightbox-close" id="imageLightboxClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <img class="image-lightbox-img" id="imageLightboxImg" alt="" />
+      <div class="image-lightbox-actions">
+        <button type="button" class="image-lightbox-download" id="imageLightboxDownload">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+          Download
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="image-uploader-modal" id="imageUploaderModal" hidden aria-hidden="true">
+    <button type="button" class="uploader-backdrop" id="uploaderBackdrop" aria-label="Close uploader"></button>
+    <div class="uploader-dialog" role="dialog" aria-modal="true" aria-label="Upload image to webhook">
+      <div class="uploader-header">
+        <h2 class="uploader-title">Upload Image to Webhook</h2>
+        <button type="button" class="uploader-close" id="uploaderClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="uploader-info" style="padding: 12px 20px; background: rgba(59, 130, 246, 0.05); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-2);">
+        ⚠️ <strong>Note:</strong> Your webhook server must have CORS enabled. <a href="#" style="color: var(--accent); text-decoration: underline;" onclick="alert('For n8n: Enable CORS in Webhook node settings. For custom servers: Add Access-Control-Allow-Origin headers. Check browser console for detailed error messages.')">Learn more</a>
+      </div>
+
+      <div class="uploader-content">
+        <div class="uploader-preview" id="uploaderPreview"></div>
+
+        <div class="uploader-form">
+          <div class="uploader-field">
+            <label for="uploaderFileInput" class="uploader-label">Select Image:</label>
+            <input type="file" id="uploaderFileInput" accept="image/*" class="uploader-file-input" />
+          </div>
+
+          <div class="uploader-field">
+            <label for="uploaderWebhookUrl" class="uploader-label">Webhook URL:</label>
+            <input type="url" id="uploaderWebhookUrl" class="uploader-url-input" placeholder="https://your-webhook-url.com/upload" />
+          </div>
+
+          <div class="uploader-field">
+            <label for="uploaderFieldName" class="uploader-label">Field Name (optional):</label>
+            <input type="text" id="uploaderFieldName" class="uploader-url-input" placeholder="Leave empty to auto-detect (image, file, upload, attachment)" value="image" />
+            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">The form field name the webhook expects for the image</small>
+          </div>
+
+          <div class="uploader-field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="uploaderSendAsJson" style="cursor: pointer; width: 18px; height: 18px;" />
+              <span>Send as JSON (Base64)</span>
+            </label>
+            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Convert image to Base64 and send as JSON instead of multipart/form-data</small>
+          </div>
+
+          <div class="uploader-field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="uploaderSendBinary" style="cursor: pointer; width: 18px; height: 18px;" />
+              <span>Send as Raw Binary</span>
+            </label>
+            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Send raw binary image data (application/octet-stream)</small>
+          </div>
+
+          <div class="uploader-field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="uploaderShowDebug" style="cursor: pointer; width: 18px; height: 18px;" />
+              <span>Show Debug Info</span>
+            </label>
+            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Display detailed upload request information</small>
+          </div>
+
+          <div class="uploader-field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="uploaderUseProxy" style="cursor: pointer; width: 18px; height: 18px;" />
+              <span>Use Local Proxy (bypass CORS)</span>
+            </label>
+            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Route through /api/upload to bypass CORS issues</small>
+          </div>
+
+          <div class="uploader-status" id="uploaderStatus"></div>
+
+          <div class="uploader-actions">
+            <button type="button" class="uploader-cancel" id="uploaderCancelBtn">Cancel</button>
+            <button type="button" class="uploader-submit" id="uploaderSubmitBtn" disabled>Upload Image</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/chat.js"></script>
+</body>
+</html>

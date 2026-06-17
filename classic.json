@@ -1,0 +1,718 @@
+{
+    "name":  "Viral Marketing AI Agent - Full Stack",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "viral-marketing-agent",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-webhook-01",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       120,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// PARSE INCOMING REQUEST\n// Handles: text messages, session IDs, and\n// optional image uploads from binary OR JSON POST\n// fields such as images, postImages, image, etc.\n// =============================================\n\nconst input = $input.first();\nconst body = input.json || {};\nconst binaryData = input.binary || {};\n\n// --- Extract message ---\nconst message = body.message || body.text || body.query || body.chatInput || \u0027\u0027;\nconst sessionId = body.sessionId || body.session_id || body.userId || body.user_id || \u0027session-default\u0027;\nconst requestPdf = body.generatePdf === true || body.generate_pdf === true || body.pdf === true;\nconst requestImageGen = body.generateImage === true || body.generateImage === \u0027true\u0027 || body.generate_image === true || body.generate_image === \u0027true\u0027 || body.requestImageGen === true || body.requestImageGen === \u0027true\u0027;\n\n// --- Normalize uploaded image (selfie / reference / post image) ---\nlet hasReferenceImage = false;\nlet referenceImageBase64 = \u0027\u0027;\nlet referenceImageMimeType = \u0027image/jpeg\u0027;\nlet uploadedImages = [];\n\nfunction parseDataUrl(value) {\n  const match = String(value || \u0027\u0027).match(/^data:(image\\/[a-zA-Z0-9.+-]+);base64,(.+)$/);\n  return match ? { mimeType: match[1], data: match[2].replace(/\\s/g, \u0027\u0027) } : null;\n}\n\nfunction addImage(value, fallbackMimeType = \u0027image/jpeg\u0027) {\n  if (!value) return;\n\n  if (typeof value === \u0027string\u0027) {\n    const dataUrl = parseDataUrl(value);\n    if (dataUrl) {\n      uploadedImages.push(dataUrl);\n      return;\n    }\n\n    const compact = value.replace(/\\s/g, \u0027\u0027);\n    if (/^[A-Za-z0-9+/_=-]+$/.test(compact) \u0026\u0026 compact.length \u003e 80) {\n      uploadedImages.push({ mimeType: fallbackMimeType, data: compact });\n    }\n    return;\n  }\n\n  if (Array.isArray(value)) {\n    value.forEach((item) =\u003e addImage(item, fallbackMimeType));\n    return;\n  }\n\n  if (typeof value === \u0027object\u0027) {\n    const mimeType = value.mimeType || value.mime_type || value.type || fallbackMimeType;\n    addImage(value.dataUrl || value.data_url || value.base64 || value.data || value.image || value.src || value.url, mimeType);\n  }\n}\n\nconst imageKeys = Object.keys(binaryData).filter((key) =\u003e\n  binaryData[key] \u0026\u0026 binaryData[key].mimeType \u0026\u0026 binaryData[key].mimeType.startsWith(\u0027image/\u0027)\n);\n\nfor (const key of imageKeys) {\n  const img = binaryData[key];\n  addImage({ data: img.data || \u0027\u0027, mimeType: img.mimeType || \u0027image/jpeg\u0027 });\n}\n\naddImage(body.images);\naddImage(body.postImages);\naddImage(body.post_images);\naddImage(body.uploadedImages);\naddImage(body.uploaded_images);\naddImage(body.attachments);\naddImage(body.files);\naddImage(body.image);\naddImage(body.postImage);\naddImage(body.post_image);\naddImage(body.imageBase64 || body.image_base64, body.imageMimeType || body.image_mime_type || \u0027image/jpeg\u0027);\n\nif (uploadedImages.length \u003e 0) {\n  hasReferenceImage = true;\n  referenceImageBase64 = uploadedImages[0].data || \u0027\u0027;\n  referenceImageMimeType = uploadedImages[0].mimeType || \u0027image/jpeg\u0027;\n}\n\nreturn [{\n  json: {\n    message,\n    sessionId,\n    requestPdf,\n    requestImageGen,\n    hasReferenceImage,\n    referenceImageBase64,\n    referenceImageMimeType,\n    uploadedImages,\n    uploadedImageCount: uploadedImages.length,\n    imageContext: hasReferenceImage\n      ? \u0027User uploaded an image with the post/webhook request. Use it as the reference image when the user asks for same face, post image, photo editing, or personalized visuals.\u0027\n      : \u0027No reference image was uploaded. Generate images without a specific face reference unless the user provides one.\u0027,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "node-parse-01",
+                      "name":  "Parse Input \u0026 Detect Image",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       340,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $json.message }}",
+                                         "options":  {
+                                                         "systemMessage":  "=Your name is Louis Smart. You are a strategic AI marketing assistant developed exclusively by the Ironbrij IT Team. If asked who built you, mention Bibek Parajuli.\n\nCore purpose: viral social media content creation, storytelling frameworks, hook generation, audience psychology, conversion copywriting, and platform-specific growth strategy.\n\nBehavioral rules:\n- Do not interrogate the user. Gather the core criteria naturally: Persona, Niche, Offer, Psychographics, Tone.\n- Unless the user gives an explicit generation command, skips a step, or provides a direct request, ask one question at a time:\n  1. Who is the ideal persona?\n  2. What is the niche or audience segment?\n  3. What is the service, product, or transformation being offered?\n  After Q3, automatically provide the Top 10 fears, frustrations, dreams, and desires for that persona. Then ask if they want the table by typing Dream or hooks by typing Hook.\n  4. What tone would they like?\n- If the user seems impatient, says skip, says just write it, or gives a direct generation request, infer missing psychological details using timeless direct-response marketing principles inspired by Dan Kennedy, David Ogilvy, and Gary Halbert. Proceed immediately.\n- Keep momentum high. Do not stall.\n- Save and use conversation context.\n- Stay in character as Louis Smart.\n\nTrigger commands:\n- Dream: Create a fear/frustration/dream/desire table.\n- Hook: Generate 20 viral hooks.\n- Story: Generate 20 metaphor/story ideas aligned with the hooks.\n- Posts: Generate 20 highly addictive ready-to-post Facebook/social posts.\n\nImage generation request handling:\nWhen the user requests an image, graphic, visual modification, post image, ad cover, thumbnail, picture, or says phrases like generate image, create a picture, make a celebration using the same face, or draw this, handle it immediately.\n\nUse this context from the webhook:\n{{ $json.imageContext }}\nReference image available: {{ $json.hasReferenceImage }}\nUploaded image count: {{ $json.uploadedImageCount }}\n\nFor image requests:\n1. Read the preceding chat history and current user request.\n2. Analyze the target demographic, marketing topic, or explicit visual request.\n3. If the user mentions same face or has uploaded a reference image, include explicit prompt instructions to keep facial structure, gender, hairstyle, age features, and overall likeness consistent with the reference image.\n4. Summarize the visual context into one highly descriptive paragraph.\n5. Output only this clean JSON block so the n8n conditional pipeline can read it:\n```json\n{\n  \"generateImage\": \"true\",\n  \"prompt\": \"A high-quality, professional marketing visual showing [insert highly detailed description of the scene, lighting, mood, composition, platform context, and explicit facial consistency details when a reference image is present]. Cinematic lighting, modern composition, clean digital platform style.\"\n}\n```\n\nFor normal content requests, output clean text or markdown tables. Use warm, direct, strategic language."
+                                                     }
+                                     },
+                      "id":  "node-agent-01",
+                      "name":  "Viral Marketing AI Agent",
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  1.7,
+                      "position":  [
+                                       580,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  "gpt-4o",
+                                         "options":  {
+                                                         "maxTokens":  4096,
+                                                         "temperature":  0.85
+                                                     }
+                                     },
+                      "id":  "node-gpt4o-01",
+                      "name":  "GPT-4o Model",
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       400,
+                                       600
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "YOUR_OPENAI_CREDENTIAL_ID",
+                                                            "name":  "OpenAI API"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sessionIdType":  "customKey",
+                                         "sessionKey":  "={{ $(\u0027Parse Input \u0026 Detect Image\u0027).first().json.sessionId }}",
+                                         "contextWindowLength":  30
+                                     },
+                      "id":  "node-memory-01",
+                      "name":  "Window Memory",
+                      "type":  "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       580,
+                                       600
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// PARSE AGENT RESPONSE\n// Detects image/PDF commands embedded in output.\n// Supports both legacy { command: \"GENERATE_IMAGE\" }\n// and webhook JSON { generateImage: \"true\", prompt: \"...\" }.\n// =============================================\n\nconst agentOutput = $input.first().json.output || $input.first().json.text || \u0027\u0027;\nconst ctx = $(\u0027Parse Input \u0026 Detect Image\u0027).first().json;\n\nfunction parseJsonBlocks(text) {\n  const blocks = [];\n  const fenced = text.matchAll(/```json\\s*([\\s\\S]*?)\\s*```/gi);\n  for (const match of fenced) {\n    try { blocks.push(JSON.parse(match[1])); } catch(e) {}\n  }\n\n  const trimmed = text.trim();\n  if (trimmed.startsWith(\u0027{\u0027) \u0026\u0026 trimmed.endsWith(\u0027}\u0027)) {\n    try { blocks.push(JSON.parse(trimmed)); } catch(e) {}\n  }\n\n  return blocks;\n}\n\nconst jsonBlocks = parseJsonBlocks(agentOutput);\nlet imageCommand = null;\nlet pdfCommand = null;\n\nfor (const block of jsonBlocks) {\n  if (!block || typeof block !== \u0027object\u0027) continue;\n\n  const wantsImage = block.command === \u0027GENERATE_IMAGE\u0027 || block.generateImage === true || block.generateImage === \u0027true\u0027 || block.generate_image === true || block.generate_image === \u0027true\u0027;\n  if (wantsImage \u0026\u0026 !imageCommand) {\n    imageCommand = {\n      command: \u0027GENERATE_IMAGE\u0027,\n      prompt: block.prompt || block.imagePrompt || block.image_prompt || \u0027\u0027,\n      style: block.style || \u0027professional viral marketing thumbnail, bold typography overlay space, high contrast colors, social media optimized, cinematic lighting, modern composition, clean digital platform style\u0027,\n      size: block.size || \u00271024x1024\u0027,\n      useReferenceImage: block.useReferenceImage === true || block.useReferenceImage === \u0027true\u0027 || ctx.hasReferenceImage === true\n    };\n  }\n\n  if ((block.command === \u0027GENERATE_PDF\u0027 || block.generatePdf === true || block.generate_pdf === true) \u0026\u0026 !pdfCommand) {\n    pdfCommand = block;\n  }\n}\n\nconst cleanOutput = agentOutput\n  .replace(/```json[\\s\\S]*?```/g, \u0027\u0027)\n  .replace(/^\\s*{[\\s\\S]*}\\s*$/g, \u0027\u0027)\n  .replace(/\\n{3,}/g, \u0027\\n\\n\u0027)\n  .trim();\n\nlet routeTo = \u0027text_only\u0027;\nif (imageCommand \u0026\u0026 imageCommand.prompt) {\n  routeTo = (imageCommand.useReferenceImage \u0026\u0026 ctx.hasReferenceImage)\n    ? \u0027image_with_face\u0027\n    : \u0027image_no_face\u0027;\n} else if (pdfCommand) {\n  routeTo = \u0027pdf_only\u0027;\n}\n\nreturn [{\n  json: {\n    agentOutput,\n    cleanOutput,\n    imageCommand,\n    pdfCommand,\n    routeTo,\n    sessionId: ctx.sessionId,\n    hasReferenceImage: ctx.hasReferenceImage,\n    referenceImageBase64: ctx.referenceImageBase64 || \u0027\u0027,\n    referenceImageMimeType: ctx.referenceImageMimeType || \u0027image/jpeg\u0027,\n    uploadedImages: ctx.uploadedImages || [],\n    uploadedImageCount: ctx.uploadedImageCount || 0,\n    requestPdf: ctx.requestPdf || false,\n    timestamp: ctx.timestamp\n  }\n}];"
+                                     },
+                      "id":  "node-parse-resp-01",
+                      "name":  "Parse Agent Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       820,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "rules":  [
+                                                                     {
+                                                                         "conditions":  {
+                                                                                            "options":  {
+                                                                                                            "caseSensitive":  true,
+                                                                                                            "leftValue":  "",
+                                                                                                            "typeValidation":  "strict"
+                                                                                                        },
+                                                                                            "conditions":  [
+                                                                                                               {
+                                                                                                                   "leftValue":  "={{ $json.routeTo }}",
+                                                                                                                   "rightValue":  "image_no_face",
+                                                                                                                   "operator":  {
+                                                                                                                                    "type":  "string",
+                                                                                                                                    "operation":  "equals"
+                                                                                                                                }
+                                                                                                               }
+                                                                                                           ],
+                                                                                            "combinator":  "and"
+                                                                                        },
+                                                                         "renameOutput":  true,
+                                                                         "outputKey":  "Image No Face"
+                                                                     },
+                                                                     {
+                                                                         "conditions":  {
+                                                                                            "options":  {
+                                                                                                            "caseSensitive":  true,
+                                                                                                            "leftValue":  "",
+                                                                                                            "typeValidation":  "strict"
+                                                                                                        },
+                                                                                            "conditions":  [
+                                                                                                               {
+                                                                                                                   "leftValue":  "={{ $json.routeTo }}",
+                                                                                                                   "rightValue":  "image_with_face",
+                                                                                                                   "operator":  {
+                                                                                                                                    "type":  "string",
+                                                                                                                                    "operation":  "equals"
+                                                                                                                                }
+                                                                                                               }
+                                                                                                           ],
+                                                                                            "combinator":  "and"
+                                                                                        },
+                                                                         "renameOutput":  true,
+                                                                         "outputKey":  "Image With Face"
+                                                                     },
+                                                                     {
+                                                                         "conditions":  {
+                                                                                            "options":  {
+                                                                                                            "caseSensitive":  true,
+                                                                                                            "leftValue":  "",
+                                                                                                            "typeValidation":  "strict"
+                                                                                                        },
+                                                                                            "conditions":  [
+                                                                                                               {
+                                                                                                                   "leftValue":  "={{ $json.routeTo }}",
+                                                                                                                   "rightValue":  "pdf_only",
+                                                                                                                   "operator":  {
+                                                                                                                                    "type":  "string",
+                                                                                                                                    "operation":  "equals"
+                                                                                                                                }
+                                                                                                               }
+                                                                                                           ],
+                                                                                            "combinator":  "and"
+                                                                                        },
+                                                                         "renameOutput":  true,
+                                                                         "outputKey":  "PDF Only"
+                                                                     },
+                                                                     {
+                                                                         "conditions":  {
+                                                                                            "options":  {
+                                                                                                            "caseSensitive":  true,
+                                                                                                            "leftValue":  "",
+                                                                                                            "typeValidation":  "strict"
+                                                                                                        },
+                                                                                            "conditions":  [
+                                                                                                               {
+                                                                                                                   "leftValue":  "={{ $json.routeTo }}",
+                                                                                                                   "rightValue":  "text_only",
+                                                                                                                   "operator":  {
+                                                                                                                                    "type":  "string",
+                                                                                                                                    "operation":  "equals"
+                                                                                                                                }
+                                                                                                               }
+                                                                                                           ],
+                                                                                            "combinator":  "and"
+                                                                                        },
+                                                                         "renameOutput":  true,
+                                                                         "outputKey":  "Text Only"
+                                                                     }
+                                                                 ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-switch-01",
+                      "name":  "Command Router",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       1060,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/images/generations",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "openAiApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"model\": \"dall-e-3\",\n  \"prompt\": {{ JSON.stringify($json.imageCommand.prompt + \u0027 Style: \u0027 + $json.imageCommand.style + \u0027. Marketing thumbnail. Bold. High contrast. Viral social media aesthetic. Professional quality.\u0027) }},\n  \"n\": 1,\n  \"size\": {{ JSON.stringify($json.imageCommand.size || \u00271024x1024\u0027) }},\n  \"quality\": \"hd\",\n  \"response_format\": \"url\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-dalle-noface-01",
+                      "name":  "DALL-E 3 (No Face)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1300,
+                                       160
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "YOUR_OPENAI_CREDENTIAL_ID",
+                                                            "name":  "OpenAI API"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// PREPARE FACE REFERENCE\n// Enhances the image prompt to incorporate\n// the user\u0027s uploaded selfie as face reference\n// Uses DALL-E 3 with descriptive face guidance\n// (For EXACT face swap: swap this node for a\n//  Replicate/InstantID HTTP Request instead)\n// =============================================\n\nconst data = $input.first().json;\nconst cmd = data.imageCommand || {};\n\n// Build enhanced prompt describing face reference intent\nconst enhancedPrompt = `${cmd.prompt}. The featured person should match the reference individual\u0027s facial features, hairstyle, and likeness closely. ${cmd.style}. Professional marketing thumbnail. Viral social media aesthetic. Bold composition.`;\n\nreturn [{\n  json: {\n    ...data,\n    enhancedPrompt,\n    dalleSize: cmd.size || \u00271024x1024\u0027,\n    faceRefNote: \u0027Warning: DALL-E 3 approximates face reference via prompt. For pixel-accurate face replication, connect a Replicate/InstantID node and swap this code node for it.\u0027\n  }\n}];"
+                                     },
+                      "id":  "node-face-prep-01",
+                      "name":  "Prepare Face Reference",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1300,
+                                       340
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/images/generations",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "openAiApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"model\": \"dall-e-3\",\n  \"prompt\": {{ JSON.stringify($json.enhancedPrompt) }},\n  \"n\": 1,\n  \"size\": {{ JSON.stringify($json.dalleSize || \u00271024x1024\u0027) }},\n  \"quality\": \"hd\",\n  \"response_format\": \"url\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-dalle-face-01",
+                      "name":  "DALL-E 3 (With Face)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1520,
+                                       340
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "YOUR_OPENAI_CREDENTIAL_ID",
+                                                            "name":  "OpenAI API"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// PROCESS IMAGE RESULT\n// Normalizes output from both DALL-E paths\n// and prepares for PDF (if requested) or\n// direct response\n// =============================================\n\nconst dalleResult = $input.first().json;\nconst ctx = $(\u0027Parse Agent Response\u0027).first().json;\n\n// Extract generated image URL\nconst imageUrl = (dalleResult.data \u0026\u0026 dalleResult.data[0])\n  ? dalleResult.data[0].url\n  : null;\n\nconst revisedPrompt = (dalleResult.data \u0026\u0026 dalleResult.data[0])\n  ? dalleResult.data[0].revised_prompt\n  : ctx.imageCommand?.prompt || \u0027\u0027;\n\nreturn [{\n  json: {\n    ...ctx,\n    generatedImageUrl: imageUrl,\n    revisedPrompt,\n    imageGenerated: !!imageUrl,\n    // If user originally requested PDF, flow through to PDF builder\n    nextStep: ctx.requestPdf ? \u0027build_pdf\u0027 : \u0027respond_image\u0027\n  }\n}];"
+                                     },
+                      "id":  "node-img-result-01",
+                      "name":  "Process Image Result",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1740,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "pdf-check",
+                                                                                   "leftValue":  "={{ $json.nextStep }}",
+                                                                                   "rightValue":  "build_pdf",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-if-pdf-01",
+                      "name":  "Also Need PDF?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1960,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// BUILD PDF HTML\n// Creates a beautiful, branded HTML document\n// that will be converted to PDF.\n// Includes the generated thumbnail image.\n// =============================================\n\nconst data = $input.first().json;\nconst agentText = data.cleanOutput || data.agentOutput || \u0027Marketing Content\u0027;\nconst imageUrl = data.generatedImageUrl || null;\nconst pdfCmd = data.pdfCommand || {};\nconst title = pdfCmd.title || \u0027Viral Marketing Strategy\u0027;\nconst subtitle = pdfCmd.subtitle || \u0027Complete Campaign Report\u0027;\nconst today = new Date().toLocaleDateString(\u0027en-US\u0027, { year: \u0027numeric\u0027, month: \u0027long\u0027, day: \u0027numeric\u0027 });\n\n// Format agent text into HTML (convert markdown-style to HTML)\nconst formatContent = (text) =\u003e {\n  return text\n    .replace(/\\*\\*(.+?)\\*\\*/g, \u0027\u003cstrong\u003e$1\u003c/strong\u003e\u0027)\n    .replace(/\\*(.+?)\\*/g, \u0027\u003cem\u003e$1\u003c/em\u003e\u0027)\n    .replace(/^(\\d+\\. .+)$/gm, \u0027\u003cdiv class=\"list-item\"\u003e$1\u003c/div\u003e\u0027)\n    .replace(/^(- .+|â€¢ .+)$/gm, \u0027\u003cdiv class=\"bullet\"\u003e$1\u003c/div\u003e\u0027)\n    .replace(/^(#{1,3} .+)$/gm, \u0027\u003ch3\u003e$1\u003c/h3\u003e\u0027)\n    .replace(/\\n\\n/g, \u0027\u003c/p\u003e\u003cp\u003e\u0027)\n    .replace(/\\n/g, \u0027\u003cbr\u003e\u0027);\n};\n\nconst htmlContent = `\u003c!DOCTYPE html\u003e\n\u003chtml lang=\"en\"\u003e\n\u003chead\u003e\n\u003cmeta charset=\"UTF-8\"\u003e\n\u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"\u003e\n\u003cstyle\u003e\n  * { margin: 0; padding: 0; box-sizing: border-box; }\n  body {\n    font-family: \u0027Helvetica Neue\u0027, Arial, sans-serif;\n    background: #ffffff;\n    color: #1e293b;\n    line-height: 1.7;\n  }\n  .cover {\n    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);\n    padding: 60px 48px;\n    color: white;\n    text-align: center;\n    position: relative;\n    overflow: hidden;\n  }\n  .cover::before {\n    content: \u0027\u0027;\n    position: absolute;\n    top: -50%;\n    left: -50%;\n    width: 200%;\n    height: 200%;\n    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);\n  }\n  .cover-badge {\n    display: inline-block;\n    background: rgba(255,255,255,0.2);\n    border: 1px solid rgba(255,255,255,0.3);\n    padding: 6px 20px;\n    border-radius: 50px;\n    font-size: 11px;\n    letter-spacing: 2px;\n    text-transform: uppercase;\n    margin-bottom: 24px;\n  }\n  .cover h1 {\n    font-size: 42px;\n    font-weight: 900;\n    line-height: 1.2;\n    margin-bottom: 12px;\n    text-shadow: 0 2px 20px rgba(0,0,0,0.2);\n  }\n  .cover h2 {\n    font-size: 18px;\n    font-weight: 400;\n    opacity: 0.85;\n    margin-bottom: 24px;\n  }\n  .cover-date {\n    font-size: 13px;\n    opacity: 0.7;\n  }\n  .content-wrapper {\n    max-width: 800px;\n    margin: 0 auto;\n    padding: 48px 48px;\n  }\n  .section {\n    margin-bottom: 40px;\n    page-break-inside: avoid;\n  }\n  .section-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    margin-bottom: 20px;\n    padding-bottom: 12px;\n    border-bottom: 2px solid #e2e8f0;\n  }\n  .section-icon {\n    width: 40px;\n    height: 40px;\n    background: linear-gradient(135deg, #6366f1, #8b5cf6);\n    border-radius: 10px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 20px;\n    color: white;\n  }\n  .section-title {\n    font-size: 22px;\n    font-weight: 800;\n    color: #1e293b;\n  }\n  .content-card {\n    background: #f8fafc;\n    border: 1px solid #e2e8f0;\n    border-radius: 12px;\n    padding: 28px;\n    font-size: 14px;\n    color: #334155;\n  }\n  .content-card p { margin-bottom: 12px; }\n  .content-card strong { color: #6366f1; }\n  .list-item, .bullet {\n    padding: 4px 0;\n    padding-left: 20px;\n    position: relative;\n  }\n  .thumbnail-section {\n    text-align: center;\n    margin: 40px 0;\n    page-break-inside: avoid;\n  }\n  .thumbnail-section img {\n    max-width: 100%;\n    width: 600px;\n    border-radius: 16px;\n    box-shadow: 0 25px 50px rgba(0,0,0,0.15);\n    border: 1px solid #e2e8f0;\n  }\n  .thumbnail-caption {\n    margin-top: 16px;\n    font-size: 13px;\n    color: #64748b;\n    font-style: italic;\n  }\n  .stats-grid {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 16px;\n    margin: 24px 0;\n  }\n  .stat-card {\n    background: linear-gradient(135deg, #6366f1, #8b5cf6);\n    color: white;\n    border-radius: 12px;\n    padding: 20px;\n    text-align: center;\n  }\n  .stat-number { font-size: 28px; font-weight: 900; }\n  .stat-label { font-size: 11px; opacity: 0.8; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }\n  .footer {\n    background: #1e293b;\n    color: #94a3b8;\n    text-align: center;\n    padding: 32px;\n    font-size: 12px;\n    margin-top: 60px;\n  }\n  .footer strong { color: #6366f1; }\n  @media print {\n    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n    .stat-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n  }\n\u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n\n  \u003c!-- COVER --\u003e\n  \u003cdiv class=\"cover\"\u003e\n    \u003cdiv class=\"cover-badge\"\u003eðŸš€ Viral Marketing AI Report\u003c/div\u003e\n    \u003ch1\u003e${title}\u003c/h1\u003e\n    \u003ch2\u003e${subtitle}\u003c/h2\u003e\n    \u003cdiv class=\"cover-date\"\u003eðŸ“… Generated on ${today}\u003c/div\u003e\n  \u003c/div\u003e\n\n  \u003cdiv class=\"content-wrapper\"\u003e\n\n    \u003c!-- STATS OVERVIEW --\u003e\n    \u003cdiv class=\"stats-grid\" style=\"margin-top: 40px;\"\u003e\n      \u003cdiv class=\"stat-card\"\u003e\n        \u003cdiv class=\"stat-number\"\u003e20+\u003c/div\u003e\n        \u003cdiv class=\"stat-label\"\u003eViral Hooks\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cdiv class=\"stat-card\"\u003e\n        \u003cdiv class=\"stat-number\"\u003e20+\u003c/div\u003e\n        \u003cdiv class=\"stat-label\"\u003eStory Frameworks\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cdiv class=\"stat-card\"\u003e\n        \u003cdiv class=\"stat-number\"\u003eAI\u003c/div\u003e\n        \u003cdiv class=\"stat-label\"\u003ePowered\u003c/div\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n\n    \u003c!-- GENERATED THUMBNAIL --\u003e\n    ${imageUrl ? `\n    \u003cdiv class=\"thumbnail-section\"\u003e\n      \u003cdiv class=\"section-header\"\u003e\n        \u003cdiv class=\"section-icon\"\u003eðŸŽ¨\u003c/div\u003e\n        \u003cdiv class=\"section-title\"\u003eAI-Generated Marketing Thumbnail\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cimg src=\"${imageUrl}\" alt=\"Generated Marketing Thumbnail\" /\u003e\n      \u003cdiv class=\"thumbnail-caption\"\u003eGenerated with DALL-E 3 â€¢ Optimized for viral social media performance\u003c/div\u003e\n    \u003c/div\u003e` : \u0027\u0027}\n\n    \u003c!-- MAIN CONTENT --\u003e\n    \u003cdiv class=\"section\"\u003e\n      \u003cdiv class=\"section-header\"\u003e\n        \u003cdiv class=\"section-icon\"\u003eðŸ“Š\u003c/div\u003e\n        \u003cdiv class=\"section-title\"\u003eMarketing Strategy \u0026 Content\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cdiv class=\"content-card\"\u003e\n        \u003cp\u003e${formatContent(agentText)}\u003c/p\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n\n    \u003c!-- FRAMEWORKS REFERENCE --\u003e\n    \u003cdiv class=\"section\"\u003e\n      \u003cdiv class=\"section-header\"\u003e\n        \u003cdiv class=\"section-icon\"\u003eðŸ§ \u003c/div\u003e\n        \u003cdiv class=\"section-title\"\u003eStorytelling Frameworks Used\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cdiv class=\"content-card\"\u003e\n        \u003cp\u003e\u003cstrong\u003eHero\u0027s Journey (Campbell/Vogler):\u003c/strong\u003e Ordinary World â†’ Call to Adventure â†’ Refusal â†’ Mentor â†’ Threshold â†’ Tests/Allies/Enemies â†’ Inmost Cave â†’ Ordeal â†’ Reward â†’ Road Back â†’ Resurrection â†’ Return with Elixir\u003c/p\u003e\n        \u003cbr\u003e\n        \u003cp\u003e\u003cstrong\u003eEpiphany Bridge:\u003c/strong\u003e Introduction â†’ Journey \u0026amp; Conflict â†’ New Opportunity â†’ Framework â†’ Successes. Emotional-first selling that helps your audience sell themselves.\u003c/p\u003e\n        \u003cbr\u003e\n        \u003cp\u003e\u003cstrong\u003eReluctant Guide:\u003c/strong\u003e Position yourself as someone who was once where your audience is â€” your transformation becomes their roadmap.\u003c/p\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n\n  \u003c/div\u003e\u003c!-- end content-wrapper --\u003e\n\n  \u003c!-- FOOTER --\u003e\n  \u003cdiv class=\"footer\"\u003e\n    \u003cp\u003eðŸš€ Created with \u003cstrong\u003eViral Marketing AI Agent\u003c/strong\u003e â€¢ Powered by GPT-4o \u0026amp; DALL-E 3\u003c/p\u003e\n    \u003cp style=\"margin-top: 8px;\"\u003eInspired by Seth Godin â€¢ Gary Halbert â€¢ David Ogilvy â€¢ Dan Kennedy â€¢ Russell Brunson\u003c/p\u003e\n    \u003cp style=\"margin-top: 8px; font-size: 11px;\"\u003eÂ© ${new Date().getFullYear()} â€” All content generated by AI for marketing purposes\u003c/p\u003e\n  \u003c/div\u003e\n\n\u003c/body\u003e\n\u003c/html\u003e`;\n\nreturn [{\n  json: {\n    ...data,\n    htmlContent,\n    pdfTitle: title\n  }\n}];"
+                                     },
+                      "id":  "node-build-pdf-01",
+                      "name":  "Build PDF HTML",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2200,
+                                       180
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.html2pdf.app/v1/generate",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"html\": {{ JSON.stringify($json.htmlContent) }},\n  \"apiKey\": \"YOUR_HTML2PDF_APP_API_KEY\",\n  \"marginTop\": 0,\n  \"marginBottom\": 0,\n  \"marginLeft\": 0,\n  \"marginRight\": 0\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "node-convert-pdf-01",
+                      "name":  "Convert HTML to PDF",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       2420,
+                                       180
+                                   ],
+                      "notes":  "Sign up FREE at https://html2pdf.app â€” get your API key and replace YOUR_HTML2PDF_APP_API_KEY"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// FORMAT PDF RESPONSE\n// =============================================\n\nconst pdfResult = $input.first().json;\nconst ctx = $(\u0027Parse Agent Response\u0027).first().json;\n\n// html2pdf.app returns { url: \u0027...\u0027 } or binary PDF\nconst pdfUrl = pdfResult.url || pdfResult.pdfUrl || pdfResult.link || null;\n\nreturn [{\n  json: {\n    success: true,\n    type: \u0027pdf_response\u0027,\n    sessionId: ctx.sessionId,\n    message: ctx.cleanOutput,\n    timestamp: new Date().toISOString(),\n    result: {\n      hasPdf: true,\n      pdfUrl: pdfUrl,\n      hasImage: !!ctx.generatedImageUrl,\n      imageUrl: ctx.generatedImageUrl || null,\n      imageUsedFaceReference: ctx.hasReferenceImage \u0026\u0026 ctx.imageCommand?.useReferenceImage,\n      pdfTitle: ctx.pdfCommand?.title || \u0027Marketing Report\u0027\n    },\n    meta: {\n      commandDetected: ctx.imageCommand ? \u0027IMAGE+PDF\u0027 : \u0027PDF\u0027,\n      sessionId: ctx.sessionId,\n      agentVersion: \u0027Viral Marketing AI Agent v1.0\u0027\n    }\n  }\n}];"
+                                     },
+                      "id":  "node-fmt-pdf-01",
+                      "name":  "Format PDF Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2640,
+                                       180
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// FORMAT IMAGE-ONLY RESPONSE\n// Backend-safe n8n code: no browser DOM usage here.\n// Returns standardized JSON for the frontend to render.\n// =============================================\n\nconst data = $input.first().json;\nconst imageOutput = data.generatedImageUrl || data.output || data.imageUrl || data.image_url || null;\n\nreturn [{\n  json: {\n    success: true,\n    type: \u0027image_response\u0027,\n    sessionId: data.sessionId,\n    output: imageOutput,\n    isImage: true,\n    message: data.cleanOutput || \u0027\u0027,\n    timestamp: new Date().toISOString(),\n    result: {\n      hasPdf: false,\n      hasImage: !!imageOutput,\n      imageUrl: imageOutput,\n      revisedPrompt: data.revisedPrompt || \u0027\u0027,\n      imageUsedFaceReference: data.hasReferenceImage \u0026\u0026 data.imageCommand?.useReferenceImage\n    },\n    meta: {\n      commandDetected: \u0027IMAGE\u0027,\n      sessionId: data.sessionId,\n      agentVersion: \u0027Viral Marketing AI Agent v1.0\u0027\n    }\n  }\n}];"
+                                     },
+                      "id":  "node-fmt-img-01",
+                      "name":  "Format Image Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2200,
+                                       360
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// =============================================\n// FORMAT TEXT-ONLY RESPONSE\n// Backend-safe n8n code: return text only, frontend handles rendering.\n// =============================================\n\nconst data = $input.first().json;\nconst textOutput = data.cleanOutput || data.agentOutput || data.output || \u0027\u0027;\n\nreturn [{\n  json: {\n    success: true,\n    type: \u0027text_response\u0027,\n    sessionId: data.sessionId,\n    output: textOutput,\n    isImage: false,\n    message: textOutput,\n    timestamp: new Date().toISOString(),\n    result: {\n      hasPdf: false,\n      hasImage: false\n    },\n    meta: {\n      commandDetected: \u0027TEXT\u0027,\n      sessionId: data.sessionId,\n      agentVersion: \u0027Viral Marketing AI Agent v1.0\u0027\n    }\n  }\n}];"
+                                     },
+                      "id":  "node-fmt-txt-01",
+                      "name":  "Format Text Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1300,
+                                       600
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ JSON.stringify($json) }}",
+                                         "options":  {
+                                                         "responseCode":  200,
+                                                         "responseHeaders":  {
+                                                                                 "entries":  [
+                                                                                                 {
+                                                                                                     "name":  "Content-Type",
+                                                                                                     "value":  "application/json"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "name":  "Access-Control-Allow-Origin",
+                                                                                                     "value":  "*"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "name":  "Access-Control-Allow-Methods",
+                                                                                                     "value":  "POST, GET, OPTIONS"
+                                                                                                 }
+                                                                                             ]
+                                                                             }
+                                                     }
+                                     },
+                      "id":  "node-respond-pdf-01",
+                      "name":  "Respond PDF/Image",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       2860,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ JSON.stringify($json) }}",
+                                         "options":  {
+                                                         "responseCode":  200,
+                                                         "responseHeaders":  {
+                                                                                 "entries":  [
+                                                                                                 {
+                                                                                                     "name":  "Content-Type",
+                                                                                                     "value":  "application/json"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "name":  "Access-Control-Allow-Origin",
+                                                                                                     "value":  "*"
+                                                                                                 }
+                                                                                             ]
+                                                                             }
+                                                     }
+                                     },
+                      "id":  "node-respond-txt-01",
+                      "name":  "Respond Text",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1520,
+                                       600
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Parse Input \u0026 Detect Image",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Parse Input \u0026 Detect Image":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Viral Marketing AI Agent",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "GPT-4o Model":  {
+                                             "ai_languageModel":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Viral Marketing AI Agent",
+                                                                              "type":  "ai_languageModel",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                         },
+                        "Window Memory":  {
+                                              "ai_memory":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Viral Marketing AI Agent",
+                                                                        "type":  "ai_memory",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                          },
+                        "Viral Marketing AI Agent":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Parse Agent Response",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Parse Agent Response":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Command Router",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Command Router":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "DALL-E 3 (No Face)",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Prepare Face Reference",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Build PDF HTML",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Format Text Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "DALL-E 3 (No Face)":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Process Image Result",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Prepare Face Reference":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "DALL-E 3 (With Face)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "DALL-E 3 (With Face)":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Process Image Result",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Process Image Result":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Also Need PDF?",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Also Need PDF?":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Build PDF HTML",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Format Image Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Build PDF HTML":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Convert HTML to PDF",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Convert HTML to PDF":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Format PDF Response",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Format PDF Response":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Respond PDF/Image",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Format Image Response":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Respond PDF/Image",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Format Text Response":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Respond Text",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveManualExecutions":  true,
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "errorWorkflow":  ""
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  false,
+                 "instanceId":  "viral-marketing-ai-agent-v1"
+             },
+    "id":  "viral-marketing-ai-agent-v1",
+    "tags":  [
+                 {
+                     "id":  "t1",
+                     "name":  "Marketing AI"
+                 },
+                 {
+                     "id":  "t2",
+                     "name":  "AI Agent"
+                 },
+                 {
+                     "id":  "t3",
+                     "name":  "Image Generation"
+                 },
+                 {
+                     "id":  "t4",
+                     "name":  "PDF Export"
+                 }
+             ]
+}

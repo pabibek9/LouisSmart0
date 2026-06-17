@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login — Mate Louis Smart | AI Content Generator</title>
+  <meta name="description" content="Sign in to Mate Louis Smart to generate viral content, hooks, and scripts with AI." />
+  <meta name="theme-color" content="#fcfbf7" />
+  <meta name="color-scheme" content="light" />
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mate Louis Smart — AI Content Generator" />
+  <meta property="og:description" content="Sign in to generate viral content, hooks, and scripts with AI." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/wizard-louis.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/login.css" />
+</head>
+<body>
+  <a href="#loginCard" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;padding:8px 16px;background:#09090b;color:#fff;text-decoration:none;border-radius:4px;" onfocus="this.style.left='8px';this.style.top='8px';this.style.width='auto';this.style.height='auto';" onblur="this.style.left='-9999px';">Skip to login</a>
+  <div id="app-bootstrap-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fcfbf7; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.4s ease, visibility 0.4s ease; font-family: 'Inter', sans-serif;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1.2s linear infinite;">
+        <path d="M12 2v3"/>
+        <path d="M12 19v3"/>
+        <path d="M4.93 4.93l2.12 2.12"/>
+        <path d="M16.95 16.95l2.12 2.12"/>
+        <path d="M2 12h3"/>
+        <path d="M19 12h3"/>
+        <path d="M4.93 19.07l2.12-2.12"/>
+        <path d="M16.95 7.05l2.12-2.12"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <div style="color: #44403c; font-size: 14px; font-weight: 500; letter-spacing: 0.3px;">Loading...</div>
+    </div>
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </div>
+  <div class="login-wrapper" style="opacity: 0; transition: opacity 0.3s ease;">
+    <!-- Subtle grid background overlay -->
+    <div class="grid-bg" aria-hidden="true"></div>
+    
+    <!-- Outer positioning container for floating elements -->
+    <div class="login-container">      
+      <!-- Floating bubbles with content keywords -->
+      <div class="floating-bubble bubble-1">viral</div>
+      <div class="floating-bubble bubble-2">content worth 6 month</div>
+      <div class="floating-bubble bubble-3">hooks</div>
+      <div class="floating-bubble bubble-4">scripts</div>
+
+      <!-- Main Login Card -->
+      <main class="login-card" id="loginCard">
+        <!-- Sandbox Badge -->
+        <div class="sandbox-badge" id="sandboxBadge" style="display: none;">Sandbox Mode</div>
+        
+        <!-- Avatar Container -->
+        <div class="avatar-container">
+          <div class="avatar-squircle">
+            <img src="/wizard-louis.png" alt="Louis Smart Wizard" id="avatarImg" />
+          </div>
+        </div>
+        
+        <!-- Header Info -->
+        <header class="card-header">
+          <h1 id="authTitle">Welcome back</h1>
+          <p id="authSubtitle">Login to continue using Louis Smart.</p>
+        </header>
+        
+        <!-- Mode / Tab Switcher (Styled elegantly) -->
+        <div class="auth-tabs" id="authTabs">
+          <button type="button" class="auth-tab active" data-mode="login" id="tabLogin">Login</button>
+          <button type="button" class="auth-tab" data-mode="register" id="tabRegister">Create account</button>
+        </div>
+        
+        <!-- Form Section -->
+        <form class="auth-form" id="loginForm">
+          <!-- Name Field (Hidden by default, shown in Create Account mode) -->
+          <div class="input-group" id="nameFieldGroup" style="display: none;">
+            <label for="authName">Name</label>
+            <input type="text" id="authName" placeholder="Your name" autocomplete="name" />
+          </div>
+          
+          <!-- Email Field -->
+          <div class="input-group">
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required />
+          </div>
+          
+          <!-- Password Field -->
+          <div class="input-group">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required />
+          </div>
+          <button type="button" class="forgot-password-link" id="forgotPasswordBtn">Forgot password?</button>
+          
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <span class="btn-text" id="submitBtnText">Login</span>
+            <span class="spinner" id="submitBtnSpinner" aria-hidden="true"></span>
+          </button>
+          
+          <!-- Error feedback -->
+          <p class="error-msg" id="errorMsg"></p>
+        </form>
+
+        <!-- Google Auth Section (Moved below form) -->
+        <div class="social-auth-section" id="socialAuthSection">
+          <div class="divider">
+            <span>or</span>
+          </div>
+          <button type="button" class="google-login-btn" id="googleLoginBtn">
+            <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+        </div>
+        
+        <!-- Footnote / Mode tip -->
+        <footer class="card-footer">
+          <p id="sandboxTip">Frontend test mode. Any email/password works for now.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/login-page.js"></script>
+</body>
+</html>

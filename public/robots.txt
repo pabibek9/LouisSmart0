@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /login
+Disallow: /chat
+Disallow: /api/
+
+Sitemap: https://matelouis.com/sitemap.xml
