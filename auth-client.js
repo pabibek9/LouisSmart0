@@ -15,22 +15,21 @@ import {
 const AUTH_TOKEN_KEY = 'mls.auth_token';
 const AUTH_USER_KEY = 'mls.auth_user';
 
-// Firebase Config from Vite Environment Variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-// Check if Firebase is fully configured
-const isFirebaseConfigured = !!firebaseConfig.apiKey;
+// Firebase Config loaded from server endpoint (never embedded in client bundle)
+let firebaseConfig = {};
+let isFirebaseConfigured = false;
 
 let app;
 let auth;
 let googleProvider;
+
+try {
+  const configRes = await fetch('/api/config');
+  firebaseConfig = await configRes.json();
+  isFirebaseConfigured = !!firebaseConfig.apiKey;
+} catch (err) {
+  console.error('Failed to load Firebase config:', err);
+}
 
 if (isFirebaseConfigured) {
   try {
@@ -41,7 +40,7 @@ if (isFirebaseConfigured) {
     console.error('Firebase Initialization Error:', err);
   }
 } else {
-  console.warn('Firebase configuration is missing in .env. Running in Mock Authentication mode.');
+  console.warn('Firebase configuration is missing. Running in Mock Authentication mode.');
 }
 
 // Track state for synchronous lookups

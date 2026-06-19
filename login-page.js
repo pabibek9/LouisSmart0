@@ -3,7 +3,15 @@
 import { AuthClient } from './auth-client.js';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
-document.addEventListener('DOMContentLoaded', () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(() => {
   const form = document.getElementById('loginForm');
   const nameFieldGroup = document.getElementById('nameFieldGroup');
   const nameInput = document.getElementById('authName');

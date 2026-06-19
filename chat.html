@@ -99,12 +99,41 @@
           <span>Mate Louis Smart</span>
           <span class="model-tag">AI</span>
         </div>
-        <button class="icon-btn" id="webhookUploadBtn" aria-label="Upload image to webhook" title="Upload image to webhook">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15V5a2 2 0 0 0-2-2h-7.5"/><path d="M3 21h10.5a2 2 0 0 0 2-2V10.5"/></svg>
-        </button>
-        <button class="icon-btn" id="newChatBtnTop" aria-label="New chat">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-        </button>
+
+        <div class="topbar-export-wrap" id="topbarExportWrap">
+          <button class="icon-btn" id="topbarExportBtn" aria-label="Export conversation" title="Export conversation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <div class="topbar-export-dropdown" id="topbarExportDropdown">
+            <div class="export-dropdown-section-label">Copy to Clipboard</div>
+            <button class="export-dropdown-item" data-action="copy" data-filter="all">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              All Messages
+            </button>
+            <button class="export-dropdown-item" data-action="copy" data-filter="ai">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              AI Replies Only
+            </button>
+            <button class="export-dropdown-item" data-action="copy" data-filter="user">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              My Messages Only
+            </button>
+            <div class="export-dropdown-divider"></div>
+            <div class="export-dropdown-section-label">Download PDF</div>
+            <button class="export-dropdown-item" data-action="pdf" data-filter="all">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              All Messages
+            </button>
+            <button class="export-dropdown-item" data-action="pdf" data-filter="ai">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              AI Replies Only
+            </button>
+            <button class="export-dropdown-item" data-action="pdf" data-filter="user">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              My Messages Only
+            </button>
+          </div>
+        </div>
       </header>
 
       <section class="chat" id="chat" aria-live="polite" role="log">
@@ -134,6 +163,10 @@
       </section>
 
       <div class="composer-wrap">
+        <button class="stop-generation-btn" id="stopGenerationBtn" aria-label="Stop generating">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          Stop generating
+        </button>
         <div class="composer" id="composer" role="form" aria-label="Message composer">
           <div class="attachments" id="attachments"></div>
           <div class="composer-row">
@@ -221,82 +254,7 @@
     </div>
   </div>
 
-  <div class="image-uploader-modal" id="imageUploaderModal" hidden aria-hidden="true">
-    <button type="button" class="uploader-backdrop" id="uploaderBackdrop" aria-label="Close uploader"></button>
-    <div class="uploader-dialog" role="dialog" aria-modal="true" aria-label="Upload image to webhook">
-      <div class="uploader-header">
-        <h2 class="uploader-title">Upload Image to Webhook</h2>
-        <button type="button" class="uploader-close" id="uploaderClose" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
-        </button>
-      </div>
 
-      <div class="uploader-info" style="padding: 12px 20px; background: rgba(59, 130, 246, 0.05); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-2);">
-        ⚠️ <strong>Note:</strong> Your webhook server must have CORS enabled. <a href="#" style="color: var(--accent); text-decoration: underline;" onclick="alert('For n8n: Enable CORS in Webhook node settings. For custom servers: Add Access-Control-Allow-Origin headers. Check browser console for detailed error messages.')">Learn more</a>
-      </div>
-
-      <div class="uploader-content">
-        <div class="uploader-preview" id="uploaderPreview"></div>
-
-        <div class="uploader-form">
-          <div class="uploader-field">
-            <label for="uploaderFileInput" class="uploader-label">Select Image:</label>
-            <input type="file" id="uploaderFileInput" accept="image/*" class="uploader-file-input" />
-          </div>
-
-          <div class="uploader-field">
-            <label for="uploaderWebhookUrl" class="uploader-label">Webhook URL:</label>
-            <input type="url" id="uploaderWebhookUrl" class="uploader-url-input" placeholder="https://your-webhook-url.com/upload" />
-          </div>
-
-          <div class="uploader-field">
-            <label for="uploaderFieldName" class="uploader-label">Field Name (optional):</label>
-            <input type="text" id="uploaderFieldName" class="uploader-url-input" placeholder="Leave empty to auto-detect (image, file, upload, attachment)" value="image" />
-            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">The form field name the webhook expects for the image</small>
-          </div>
-
-          <div class="uploader-field">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="uploaderSendAsJson" style="cursor: pointer; width: 18px; height: 18px;" />
-              <span>Send as JSON (Base64)</span>
-            </label>
-            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Convert image to Base64 and send as JSON instead of multipart/form-data</small>
-          </div>
-
-          <div class="uploader-field">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="uploaderSendBinary" style="cursor: pointer; width: 18px; height: 18px;" />
-              <span>Send as Raw Binary</span>
-            </label>
-            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Send raw binary image data (application/octet-stream)</small>
-          </div>
-
-          <div class="uploader-field">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="uploaderShowDebug" style="cursor: pointer; width: 18px; height: 18px;" />
-              <span>Show Debug Info</span>
-            </label>
-            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Display detailed upload request information</small>
-          </div>
-
-          <div class="uploader-field">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-              <input type="checkbox" id="uploaderUseProxy" style="cursor: pointer; width: 18px; height: 18px;" />
-              <span>Use Local Proxy (bypass CORS)</span>
-            </label>
-            <small style="color: var(--text-3); font-size: 12px; margin-top: 4px;">Route through /api/upload to bypass CORS issues</small>
-          </div>
-
-          <div class="uploader-status" id="uploaderStatus"></div>
-
-          <div class="uploader-actions">
-            <button type="button" class="uploader-cancel" id="uploaderCancelBtn">Cancel</button>
-            <button type="button" class="uploader-submit" id="uploaderSubmitBtn" disabled>Upload Image</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <script type="module" src="/chat.js"></script>
 </body>

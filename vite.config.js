@@ -1,8 +1,66 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import https from 'https';
 import http from 'http';
 
-const htmlRewritePlugin = {
+// Helper: build the /api/config JSON response from server-side env vars
+function buildConfigResponse(env) {
+  return JSON.stringify({
+    apiKey: env.FIREBASE_API_KEY || '',
+    authDomain: env.FIREBASE_AUTH_DOMAIN || '',
+    projectId: env.FIREBASE_PROJECT_ID || '',
+    storageBucket: env.FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: env.FIREBASE_APP_ID || '',
+  });
+}
+
+// Helper: handle /api/config requests (serves Firebase config from server-side env)
+function handleApiConfig(req, res, configJson) {
+  if (req.url === '/api/config' || req.url.startsWith('/api/config?')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(configJson);
+    return true;
+  }
+  return false;
+}
+
+// Helper: handle /api/chat proxy requests
+function handleApiChat(req, res, webhookTarget, webhookPath) {
+  if (req.url === '/api/chat' || req.url.startsWith('/api/chat?')) {
+    const targetUri = new URL(webhookPath, webhookTarget);
+    const isHttps = targetUri.protocol === 'https:';
+    const proxyReq = (isHttps ? https : http).request(
+      {
+        method: req.method,
+        hostname: targetUri.hostname,
+        port: targetUri.port || (isHttps ? 443 : 80),
+        path: targetUri.pathname + targetUri.search,
+        headers: { ...req.headers, host: targetUri.hostname }
+      },
+      (proxyRes) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+      }
+    );
+    proxyReq.on('error', (err) => {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Proxy error: ' + err.message }));
+    });
+    req.pipe(proxyReq);
+    return true;
+  }
+  return false;
+}
+
+function createPlugin(env) {
+  const configJson = buildConfigResponse(env);
+  const webhookTarget = env.N8N_WEBHOOK_URL || 'https://vmi3182726.contaboserver.net';
+  const webhookPath = env.N8N_WEBHOOK_PATH || '/webhook/4f4322b3-30eb-4d63-b7ea-d9d18558772c';
+
+  return {
   name: 'html-rewrite-plugin',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
@@ -42,6 +100,9 @@ const htmlRewritePlugin = {
         res.end();
         return;
       }
+
+      // Serve Firebase config from server-side env (never in client bundle)
+      if (handleApiConfig(req, res, configJson)) return;
 
       // Proxy /api/upload requests to bypass CORS
       if (req.url.startsWith('/api/upload')) {
@@ -150,6 +211,12 @@ const htmlRewritePlugin = {
         return;
       }
 
+      // Serve Firebase config from server-side env (never in client bundle)
+      if (handleApiConfig(req, res, configJson)) return;
+
+      // Proxy /api/chat requests to n8n webhook (hides real URL from browser)
+      if (handleApiChat(req, res, webhookTarget, webhookPath)) return;
+
       // Proxy /api/upload requests to bypass CORS
       if (req.url.startsWith('/api/upload')) {
         const url = new URL(req.url, 'http://localhost:5173');
@@ -218,12 +285,20 @@ const htmlRewritePlugin = {
       next();
     });
   }
-};
+  };
+}
 
-export default defineConfig({
+export default defineConfig(({mode}) => {
+  // Load ALL env vars (empty prefix = read everything, not just VITE_)
+  const env = loadEnv(mode, process.cwd(), '');
+
+  const webhookTarget = env.N8N_WEBHOOK_URL || 'https://vmi3182726.contaboserver.net';
+  const webhookPath = env.N8N_WEBHOOK_PATH || '/webhook/4f4322b3-30eb-4d63-b7ea-d9d18558772c';
+
+  return {
   root: '.',
   publicDir: 'public',
-  plugins: [htmlRewritePlugin],
+  plugins: [createPlugin(env)],
   server: {
     port: 5173,
     host: true,
@@ -231,9 +306,18 @@ export default defineConfig({
     allowedHosts: true,
     strictPort: false,
     proxy: {
+      // Main chat proxy — hides the real n8n webhook URL from the browser
+      '/api/chat': {
+        target: webhookTarget,
+        changeOrigin: true,
+        secure: true,
+        timeout: 600000,
+        proxyTimeout: 600000,
+        rewrite: () => webhookPath,
+      },
       // Proxy n8n test webhooks (server-to-server, no CORS)
       '/n8n-webhook-test': {
-        target: 'https://vmi3182726.contaboserver.net',
+        target: webhookTarget,
         changeOrigin: true,
         secure: true,
         timeout: 600000,
@@ -242,7 +326,7 @@ export default defineConfig({
       },
       // Proxy n8n production webhooks (server-to-server, no CORS)
       '/n8n-webhook': {
-        target: 'https://vmi3182726.contaboserver.net',
+        target: webhookTarget,
         changeOrigin: true,
         secure: true,
         timeout: 600000,
@@ -257,12 +341,19 @@ export default defineConfig({
     allowedHosts: true
   },
   build: {
+    sourcemap: false,
     rollupOptions: {
       input: {
         main: 'index.html',
         login: 'login.html',
         chat: 'chat.html'
       }
+    },
+    minify: 'esbuild',
+    esbuild: {
+      drop: ['console', 'debugger']
     }
   }
+};
 });
+
